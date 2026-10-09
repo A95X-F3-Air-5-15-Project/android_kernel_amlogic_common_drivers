@@ -50,3 +50,11 @@
 	amlogic,set-rtc-on-suspend;
 };
 
+/*
+ * Entering cpu-sleep-0 with the old BL31 hung the box while bc_hrtimer was
+ * the broadcast clock event device; run Timer F as that instead.
+ */
+&{/timer_bc} {
+	status = "okay";
+};
+
