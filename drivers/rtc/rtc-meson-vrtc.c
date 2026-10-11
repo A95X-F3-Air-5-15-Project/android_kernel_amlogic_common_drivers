@@ -31,6 +31,7 @@ struct meson_vrtc_data {
 	struct timespec64 sus_time;
 	struct mbox_chan *mbox_chan;
 	bool enabled;
+	bool set_rtc_on_suspend;
 };
 
 static int meson_vrtc_read_time(struct device *dev, struct rtc_time *tm)
@@ -178,6 +179,8 @@ static int meson_vrtc_probe(struct platform_device *pdev)
 		return PTR_ERR(vrtc->io_alarm);
 
 	device_init_wakeup(&pdev->dev, 1);
+	vrtc->set_rtc_on_suspend =
+		of_property_read_bool(pdev->dev.of_node, "amlogic,set-rtc-on-suspend");
 
 	platform_set_drvdata(pdev, vrtc);
 
@@ -214,8 +217,24 @@ static int meson_vrtc_probe(struct platform_device *pdev)
 static int meson_vrtc_suspend(struct device *dev)
 {
 	struct meson_vrtc_data *vrtc = dev_get_drvdata(dev);
+	struct timespec64 boot_time;
+	u32 vrtc_val;
 
 	dev_dbg(dev, "%s\n", __func__);
+
+	/*
+	 * Old SCP firmware only counts the wakeup alarm once it has been
+	 * given the time on suspend, as scpi_set_vrtc() did in the 4.9 kernel.
+	 */
+	if (vrtc->set_rtc_on_suspend && !IS_ERR_OR_NULL(vrtc->mbox_chan)) {
+		ktime_get_boottime_ts64(&boot_time);
+		vrtc_val = (u32)boot_time.tv_sec;
+		if (aml_mbox_transfer_data(vrtc->mbox_chan, MBOX_CMD_SET_RTC,
+					   &vrtc_val, sizeof(vrtc_val),
+					   NULL, 0, MBOX_SYNC) < 0)
+			dev_err(dev, "Fail to send vrtc to SCP\n");
+	}
+
 	if (vrtc->alarm_time && vrtc->enabled) {
 		unsigned long local_time;
 		struct timespec64 time;
