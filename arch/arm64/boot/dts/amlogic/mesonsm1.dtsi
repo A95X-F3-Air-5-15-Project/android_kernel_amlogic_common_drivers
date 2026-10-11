@@ -2050,6 +2050,9 @@
 			cooling_devices {
 				cpucore_cool_cluster0 {
 					cluster_id = <0>;
+					/* Never unplug the boot CPU */
+					cluster_core_num = <3>;
+					cluster_cores = <1 2 3>;
 					node_name = "cpucore_cool0";
 					device_type = "cpucore";
 				};
@@ -2068,6 +2071,7 @@
 			};
 			gpufreq_cool0:gpufreq_cool0 {
 				#cooling-cells = <2>; /* min followed by max */
+				num_of_pp = <2>;
 			};
 			gpucore_cool0:gpucore_cool0 {
 				#cooling-cells = <2>; /* min followed by max */
