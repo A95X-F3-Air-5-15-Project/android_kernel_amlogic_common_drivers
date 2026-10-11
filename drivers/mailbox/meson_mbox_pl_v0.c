@@ -36,6 +36,13 @@
 #define ASYNC	1
 #define SYNC	2
 
+/*
+ * Header of the SCPI protocol of the 4.9 kernel (scpi_protocol.c), which
+ * old SCP firmware expects: command id in bits 0-7, sender id (always 0
+ * here) in bits 8-15 and payload size in bits 20-28.
+ */
+#define LEGACY_SCPI_CMD(cmd, size)	(((cmd) & 0xff) | (((size) & 0x1ff) << 20))
+
 struct aml_chan_priv {
 	struct aml_mbox_chan *aml_chan;
 	u32 mbox_nums;
@@ -63,10 +70,13 @@ static int mbox_transfer_data(struct mbox_chan *mbox_chan, void *data)
 {
 	struct aml_mbox_chan *aml_chan = mbox_chan->con_priv;
 	struct aml_mbox_data *aml_data = data;
-	union mbox_stat mbox_stat;
+	union mbox_stat mbox_stat = { 0 };
 	struct mbox_cmd_t *mbox_cmd = &mbox_stat.mbox_cmd_t;
 
-	mbox_cmd->cmd = aml_data->cmd;
+	if (aml_chan->legacy_scpi)
+		mbox_stat.set_cmd = LEGACY_SCPI_CMD(aml_data->cmd, aml_data->txsize);
+	else
+		mbox_cmd->cmd = aml_data->cmd;
 
 	if (!aml_chan->tx_chan) {
 		dev_err(mbox_chan->cl->dev, "%s: mbox channel is not tx channel\n",
@@ -186,6 +196,8 @@ static int mbox_pl_parse_dt(struct platform_device *pdev, struct aml_chan_priv *
 		if (IS_ERR(aml_chan[idx].mbox_fsts_addr))
 			return PTR_ERR(aml_chan[idx].mbox_fsts_addr);
 
+		aml_chan[idx].legacy_scpi =
+			of_property_read_bool(dev->of_node, "amlogic,legacy-scpi-cmd");
 		mutex_init(&aml_chan[idx].mutex);
 		aml_chan[idx].tx_complete = NULL;
 	}
