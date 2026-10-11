@@ -35,3 +35,18 @@
 	reg = <0x0 0x3>;
 };
 
+/*
+ * The SCP firmware (BL30/BL301) of the same bootloader speaks the SCPI
+ * protocol of the 4.9 kernel: the payload size goes in bits [28:20] of the
+ * MHU command, which the old mailbox driver leaves out. It also only arms
+ * the vrtc wakeup alarm after being given the time on suspend, as
+ * scpi_set_vrtc() did in the 4.9 kernel.
+ */
+&mbox_pl0 {
+	amlogic,legacy-scpi-cmd;
+};
+
+&{/rtc} {
+	amlogic,set-rtc-on-suspend;
+};
+
