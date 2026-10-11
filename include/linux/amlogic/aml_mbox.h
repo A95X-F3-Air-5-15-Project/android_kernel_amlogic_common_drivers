@@ -73,6 +73,8 @@ struct aml_mbox_chan {
 	/* mbox payload */
 	u32 mbox_irq;
 	bool tx_chan;
+	/* pack the command as the legacy SCPI header of old SCP firmware */
+	bool legacy_scpi;
 	void *data;
 
 	/* mbox common struct */
