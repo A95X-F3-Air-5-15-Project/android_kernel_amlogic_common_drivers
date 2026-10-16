@@ -102,3 +102,9 @@
 &usb3_phy_v2 {
 	otg = <0>;
 };
+
+/* Match the stock A95X F3 Air CPU frequency ceiling: 1.704 GHz. */
+&cpu_opp_table0 {
+	/delete-node/ opp10;
+	/delete-node/ opp11;
+};
