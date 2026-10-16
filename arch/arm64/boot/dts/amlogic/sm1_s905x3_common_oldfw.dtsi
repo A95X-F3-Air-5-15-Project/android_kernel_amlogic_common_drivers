@@ -15,25 +15,23 @@
  * Use the core number in Aff0 like the stock 4.9 tree, which the newer
  * VIM3L BL31 accepts as well.
  *
- * Entering cpu-sleep-0 with the old BL31 hangs the box, so keep the cores
- * in WFI.
+ * CPU idle requires the kernel legacy-suspend-mpidr quirk to
+ * match these CPU IDs when saving and restoring CPU context.
  */
-&CPU0 {
-	/delete-property/ cpu-idle-states;
+&cpus {
+	/* Match the legacy Aff0 CPU IDs below in the suspend context hash. */
+	amlogic,legacy-suspend-mpidr;
 };
 
 &CPU1 {
 	reg = <0x0 0x1>;
-	/delete-property/ cpu-idle-states;
 };
 
 &CPU2 {
 	reg = <0x0 0x2>;
-	/delete-property/ cpu-idle-states;
 };
 
 &CPU3 {
 	reg = <0x0 0x3>;
-	/delete-property/ cpu-idle-states;
 };
 
