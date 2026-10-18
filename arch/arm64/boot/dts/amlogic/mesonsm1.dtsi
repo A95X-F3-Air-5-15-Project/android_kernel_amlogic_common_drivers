@@ -2111,7 +2111,7 @@
 					contribution = <1024>;
 				};
 				cpucore_cooling_map {
-					trip = <&pcontrol>;
+					trip = <&phot>;
 					cooling-device = <&cpucore_cool0 0
 							  THERMAL_NO_LIMIT>;
 					contribution = <1024>;
