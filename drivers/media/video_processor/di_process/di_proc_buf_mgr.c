@@ -535,7 +535,7 @@ int vf_ref_count_dec(struct dp_buf_mgr_t *buf_mgr, struct vf_ref_t *vf_ref)
 
 		dp_buf_print(buf_mgr, PRINT_OTHER, "recycle: frame_index=%d\n",
 			vf_ref->vf->frame_index);
-		if (vf_ref->qbuf_id == buf_mgr->reset_id)
+		if (vf_ref->qbuf_id > 0)
 			buf_mgr->recycle_buffer_cb(buf_mgr->caller_data, vf_ref->file,
 				buf_mgr->instance_id);
 		else
@@ -619,10 +619,6 @@ int buf_mgr_reset(struct dp_buf_mgr_t *buf_mgr)
 
 	dp_buf_print(buf_mgr, PRINT_OTHER, "%s func is called\n", __func__);
 
-	mutex_lock(&buf_mgr->file_mutex);
-	buf_mgr->reset_id++;
-	mutex_unlock(&buf_mgr->file_mutex);
-
 	buf_mgr->receive_count = 0;
 
 	if (buf_mgr->ref_list_1) {
@@ -641,6 +637,11 @@ int buf_mgr_reset(struct dp_buf_mgr_t *buf_mgr)
 
 	buf_mgr->ref_list_1 = NULL;
 	buf_mgr->ref_list_2 = NULL;
+
+	mutex_lock(&buf_mgr->file_mutex);
+	buf_mgr->reset_id++;
+	mutex_unlock(&buf_mgr->file_mutex);
+
 	return 0;
 }
 EXPORT_SYMBOL(buf_mgr_reset);
